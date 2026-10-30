@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Highlight it</title>
+  <link rel="icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="fonts/fonts.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0e0e11;
+      --surface:   #17171c;
+      --border:    #2a2a35;
+      --accent:    #7b6cff;
+      --accent2:   #00e5c0;
+      --danger:    #ff5f5f;
+      --text:      #e8e6f0;
+      --muted:     #666680;
+      --mono:      'JetBrains Mono', monospace;
+      --display:   'Syne', sans-serif;
+      --sans:      system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    [hidden] { display: none !important; }
+
+    button {
+      font-family: var(--mono);
+      cursor: pointer;
+    }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .brand img { width: 28px; height: 28px; flex-shrink: 0; }
+    .brand-name {
+      font-family: var(--display);
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      white-space: nowrap;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-actions { display: flex; gap: 6px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 11px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: transparent;
+      color: var(--text);
+      font-size: 11.5px;
+      font-weight: 600;
+      transition: border-color .15s, opacity .15s;
+    }
+    .btn:hover { border-color: var(--accent); }
+    .btn.primary { border: none; background: linear-gradient(135deg, var(--accent), #9b8dff); color: #fff; }
+    .btn.primary:hover { opacity: .88; }
+    .btn.danger { color: var(--danger); }
+    .btn.danger:hover { border-color: var(--danger); }
+    .btn.icon { padding: 5px 8px; color: var(--muted); }
+    .btn.icon:hover { color: var(--text); }
+
+    /* ── Toolbar: search, scope, color filter ── */
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+      padding: 12px 16px;
+    }
+
+    .search {
+      flex: 1 1 220px;
+      padding: 8px 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      outline: none;
+    }
+    .search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(123,108,255,.12); }
+    .search::placeholder { color: var(--muted); }
+
+    .segmented {
+      display: inline-flex;
+      padding: 2px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .segmented button {
+      padding: 5px 10px;
+      border: none; border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px; font-weight: 600;
+    }
+    .segmented button[aria-pressed="true"] { background: var(--border); color: var(--text); }
+
+    .filters { display: inline-flex; gap: 6px; }
+    .swatch {
+      width: 20px; height: 20px;
+      border: 2px solid transparent;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 2px var(--bg);
+      opacity: .45;
+      transition: opacity .15s;
+    }
+    .swatch:hover { opacity: .8; }
+    .swatch[aria-pressed="true"] { opacity: 1; border-color: var(--text); }
+
+    .stats { padding: 0 16px 8px; color: var(--muted); font-size: 10.5px; }
+
+    /* ── Groups ── */
+    main { padding: 0 16px 24px; }
+
+    .group {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .group-head {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .group-info { flex: 1; min-width: 0; }
+    .group-title {
+      display: block;
+      width: 100%;
+      border: none; background: none;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13.5px; font-weight: 600;
+      text-align: left;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .group-title:hover { color: var(--accent2); }
+    .group-host {
+      color: var(--muted); font-size: 10.5px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .items { list-style: none; }
+
+    .item {
+      position: relative;
+      display: flex; align-items: flex-start; gap: 6px;
+      padding: 10px 8px 10px 14px;
+      border-top: 1px solid var(--border);
+    }
+    .item:first-child { border-top: none; }
+    .item::before {
+      content: "";
+      position: absolute; left: 0; top: 8px; bottom: 8px;
+      width: 4px;
+      border-radius: 0 3px 3px 0;
+      background: var(--c);
+    }
+
+    .item-main {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 4px;
+      border: none; background: none;
+      color: var(--text);
+      text-align: left;
+      font-family: var(--sans);
+    }
+    .item-main:hover .item-title { color: var(--accent2); }
+    .item-title {
+      font-size: 13px; line-height: 1.45;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+      overflow-wrap: anywhere;
+    }
+    .item-quote {
+      color: var(--muted); font-size: 12px; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .item-quote::before { content: "“"; }
+    .item-quote::after { content: "”"; }
+    .item-note {
+      padding: 6px 8px;
+      border-left: 2px solid var(--border);
+      color: #b9b6c8; font-size: 12px; line-height: 1.45;
+      white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+    .item-meta { color: var(--muted); font-family: var(--mono); font-size: 10px; }
+
+    .item-actions { display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
+    .item:hover .item-actions, .item:focus-within .item-actions, .group-head:hover .item-actions,
+    .group-head:focus-within .item-actions { opacity: 1; }
+
+    /* ── Inline edit / confirm ── */
+    .edit, .confirm {
+      flex: 1;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .confirm { flex-direction: row; align-items: center; flex-wrap: wrap; font-family: var(--sans); }
+    .confirm span { flex: 1; min-width: 120px; }
+    .row { display: flex; align-items: center; gap: 8px; }
+    .spacer { flex: 1; }
+    .edit input, .edit textarea {
+      width: 100%;
+      padding: 7px 9px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 12.5px;
+      outline: none;
+    }
+    .edit input:focus, .edit textarea:focus { border-color: var(--accent); }
+    .edit textarea { min-height: 70px; resize: vertical; }
+    .edit .swatch { width: 24px; height: 24px; opacity: 1; box-shadow: inset 0 0 0 2px var(--surface); }
+    .edit .swatch[aria-pressed="false"] { border-color: transparent; }
+
+    /* ── Empty state ── */
+    .empty {
+      margin-top: 40px;
+      text-align: center;
+      color: var(--muted);
+      font-family: var(--sans);
+      line-height: 1.6;
+    }
+    .empty strong { display: block; color: var(--text); font-size: 14px; margin-bottom: 4px; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 14px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s, transform .25s;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--danger); }
+
+    /* ── Full page vs sidebar ── */
+    body:not(.sidebar) header, body:not(.sidebar) .toolbar,
+    body:not(.sidebar) .stats, body:not(.sidebar) main {
+      max-width: 860px; margin-left: auto; margin-right: auto;
+    }
+    body:not(.sidebar) header { max-width: none; padding-left: max(16px, calc((100% - 860px) / 2 + 16px)); padding-right: max(16px, calc((100% - 860px) / 2 + 16px)); }
+    body:not(.sidebar) .toolbar { padding-top: 18px; }
+    body.sidebar header { padding: 10px 12px; }
+    body.sidebar .toolbar { padding: 10px 12px; }
+    body.sidebar .stats { padding: 0 12px 6px; }
+    body.sidebar main { padding: 0 12px 20px; }
+    body.sidebar .search { flex-basis: 100%; }
+    body.sidebar .group { margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img src="icons/icon.svg" alt="">
+    <span class="brand-name">Highlight it</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn" id="btn-export" type="button" title="Download all highlights as a JSON file">⤓ Export</button>
+    <button class="btn" id="btn-import" type="button" title="Add highlights from an exported JSON file">⤒ Import</button>
+    <button class="btn icon" id="btn-full" type="button" title="Open the full library in a tab" aria-label="Open the full library in a tab">⤢</button>
+    <input type="file" id="import-file" accept="application/json,.json" hidden>
+  </div>
+</header>
+
+<div class="toolbar">
+  <input class="search" id="search" type="search" placeholder="Search highlights, notes, pages…" autocomplete="off" spellcheck="false">
+  <div class="segmented" id="scope" role="group" aria-label="Show">
+    <button type="button" data-scope="page" aria-pressed="true">This page</button>
+    <button type="button" data-scope="all" aria-pressed="false">All pages</button>
+  </div>
+  <div class="filters" id="filters" role="group" aria-label="Filter by color"></div>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<main id="list"></main>
+
+<div id="toast"></div>
+
+<script src="shared.js"></script>
+<script src="library.js"></script>
+</body>
+</html>

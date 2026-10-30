@@ -1,0 +1,15 @@
+/* highlights.css — styles of the highlights painted by content.js with the
+   CSS Custom Highlight API. Text is forced to black so it stays readable on
+   dark pages too. */
+::highlight(highlight-it-cyan)    { background-color: #00F7FF; color: #000; }
+::highlight(highlight-it-yellow)  { background-color: #FCFF00; color: #000; }
+::highlight(highlight-it-green)   { background-color: #7FFF00; color: #000; }
+
+/* Highlights with a note get a dotted underline. */
+::highlight(highlight-it-note)    { text-decoration: underline dotted 2px rgba(0, 0, 0, .7); }
+
+/* Selection kept while the panel is open for a new highlight. */
+::highlight(highlight-it-pending) { background-color: rgba(123, 108, 255, .35); }
+
+/* Flash when jumping to a highlight from the library. */
+::highlight(highlight-it-focus)   { background-color: #7b6cff; color: #fff; }
